@@ -1,0 +1,179 @@
+/* ═══ Header — Stellar Glass ═══ */
+.header {
+    background: rgba(5, 5, 16, 0.75);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+    padding: 0.75rem var(--spacing-lg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: all var(--transition-normal);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Logo */
+.logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    z-index: 101;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-agent {
+    background: linear-gradient(135deg, var(--color-brand-primary-hover), var(--color-brand-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.logo-earn {
+    color: var(--color-text-primary);
+    font-weight: 800;
+}
+
+.logo-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--color-brand-secondary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--color-brand-secondary);
+    animation: starPulse 2s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--color-brand-secondary); }
+    50% { opacity: 0.5; box-shadow: 0 0 3px var(--color-brand-secondary); }
+}
+
+.logo:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+}
+
+/* Nav */
+.nav {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.nav a {
+    text-decoration: none;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.nav a:hover {
+    color: var(--color-text-primary);
+    background: rgba(99, 102, 241, 0.06);
+}
+
+.nav a:focus-visible {
+    color: var(--color-text-primary);
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--color-brand-primary);
+}
+
+/* Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    z-index: 101;
+}
+
+.github-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    padding: 6px;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.github-link:hover {
+    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.header-actions .cta-button {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    border-radius: var(--radius-full);
+}
+
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-btn:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    border-radius: var(--radius-sm);
+}
+
+@media (min-width: 769px) {
+    .mobile-menu-btn { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    .header { padding: var(--spacing-sm) var(--spacing-md); }
+
+    .nav {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(5, 5, 16, 0.95);
+        backdrop-filter: blur(20px);
+        padding: var(--spacing-xl) var(--spacing-lg);
+        border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .nav.nav-open { display: flex; }
+
+    .nav a {
+        padding: var(--spacing-md) 0;
+        width: 100%;
+        text-align: center;
+        font-size: 1.125rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .nav a:last-child { border-bottom: none; }
+
+    .cta-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .mobile-menu-btn { display: flex; }
+}

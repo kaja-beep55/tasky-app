@@ -1,0 +1,6 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect x="50" y="50" width="1100" height="530" fill="none" stroke="#6e56cf" stroke-width="4" rx="20"/>
+  <text x="600" y="315" font-family="Arial, sans-serif" font-size="80" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" font-weight="bold">Stellar Agent Earn</text>
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="40" fill="#6e56cf" text-anchor="middle" dominant-baseline="middle">Decentralized Task Marketplace</text>
+</svg>

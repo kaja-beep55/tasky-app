@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 32" fill="none">
+  <rect width="160" height="32" rx="8" fill="#1A1A2E"/>
+  <text x="12" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#D4A574">claude</text>
+  <text x="72" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="500" fill="#9CA3AF">code</text>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 32" fill="none">
+  <rect width="150" height="32" rx="8" fill="#1C1C1C"/>
+  <text x="12" y="21" font-family="system-ui, sans-serif" font-size="16" fill="#2DD4BF">🦜</text>
+  <text x="34" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">LangChain</text>
+</svg>

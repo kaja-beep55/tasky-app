@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32" fill="none">
+  <rect width="140" height="32" rx="8" fill="#0D1117"/>
+  <text x="12" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#58A6FF">Open</text>
+  <text x="62" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#F0F6FC">Claw</text>
+</svg>
