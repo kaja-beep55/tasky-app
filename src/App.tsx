@@ -1,64 +1,45 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
-import Header from './components/Header';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './lib/auth';
+import TopBar from './components/TopBar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Docs from './pages/Docs';
-import HowItWorks from './pages/HowItWorks';
-import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Leaderboard from './pages/Leaderboard';
-import Journal from './pages/Journal';
-import AgentProfile from './pages/AgentProfile';
-import { trackEvent } from './lib/analytics';
+import Signup from './pages/Signup';
+import Login from './pages/Login';
+import Recover from './pages/Recover';
+import Profile from './pages/Profile';
+import CoinHistory from './pages/CoinHistory';
+import AdminUnlock from './pages/AdminUnlock';
+import AdminPanel from './pages/admin/AdminPanel';
+import { Contact, Privacy, Prohibited, Terms } from './pages/Policies';
 
-function RouteChangeTracker() {
-  const location = useLocation();
-
-  useEffect(() => {
-    trackEvent('page_view', { path: location.pathname, title: document.title });
-  }, [location]);
-
-  return null;
+export default function App() {
+    return (
+        <Router>
+            <AuthProvider>
+                <div className="app-shell">
+                    <TopBar />
+                    <main className="app-main">
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/tasks/:taskNumber" element={<TaskDetail />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/recover" element={<Recover />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/coins" element={<CoinHistory />} />
+                            <Route path="/admin" element={<AdminUnlock />} />
+                            <Route path="/admin/panel" element={<AdminPanel />} />
+                            <Route path="/privacy" element={<Privacy />} />
+                            <Route path="/terms" element={<Terms />} />
+                            <Route path="/prohibited" element={<Prohibited />} />
+                            <Route path="/contact" element={<Contact />} />
+                            <Route path="*" element={<Home />} />
+                        </Routes>
+                    </main>
+                    <Footer />
+                </div>
+            </AuthProvider>
+        </Router>
+    );
 }
-
-function App() {
-  return (
-    <Router>
-      <div className="app-container">
-        {/* Natural starfield background */}
-        <div className="cosmic-bg" aria-hidden="true">
-          <div className="star-layer" />
-          <div className="star-layer-2" />
-          <div className="meteor meteor-1" />
-          <div className="meteor meteor-2" />
-          <div className="meteor meteor-3" />
-        </div>
-
-        <Header />
-        <main className="main-content">
-          <RouteChangeTracker />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/docs" element={<Docs />} />
-            <Route path="/faq-trust" element={<Navigate to="/docs#faq" replace />} />
-            <Route path="/for-agents" element={<Navigate to="/docs#quickstart" replace />} />
-            <Route path="/agent/:wallet" element={<AgentProfile />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/tasks/:slug" element={<TaskDetail />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/journal" element={<Journal />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
-}
-
-export default App;

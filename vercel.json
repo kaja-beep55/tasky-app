@@ -1,10 +1,4 @@
 {
-    "crons": [
-        {
-            "path": "/api/cronReview",
-            "schedule": "0 0 * * *"
-        }
-    ],
     "rewrites": [
         {
             "source": "/api/(.*)",

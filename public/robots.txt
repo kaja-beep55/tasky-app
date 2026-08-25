@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://earn.stellar.org/sitemap.xml
+Disallow: /api/

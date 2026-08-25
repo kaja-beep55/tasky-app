@@ -1,0 +1,82 @@
+import type { Task } from './types';
+
+// Seed tasks for the local driver. Once Supabase is connected,
+// tasks live in the `tasks` table and this file is unused.
+export function seedTasks(): Task[] {
+    const now = new Date().toISOString();
+    const base = { createdAt: now, updatedAt: now, status: 'published' as const };
+    return [
+        {
+            ...base,
+            id: 'seed-task-1',
+            taskNumber: '1',
+            title: 'Watch & Like This Video',
+            imageUrl: '/task-images/task-1.svg',
+            rewardCoins: 50,
+            targetUrl: 'https://www.youtube.com/',
+            description: 'Watch the full video on the target page and press the Like button. The video must be watched from start to finish.',
+            whatToDo: '1. Tap OPEN TARGET to visit the video.\n2. Watch the complete video without skipping.\n3. Press the Like button.\n4. Record a short screen video showing the watched video and your like.\n5. Send the recording on WhatsApp using the button below.',
+            rules: 'The full video must be watched. Skipping or muting may lead to rejection. One submission per account per task.',
+        },
+        {
+            ...base,
+            id: 'seed-task-2',
+            taskNumber: '2',
+            title: 'Subscribe to the Channel',
+            imageUrl: '/task-images/task-2.svg',
+            rewardCoins: 40,
+            targetUrl: 'https://www.youtube.com/',
+            description: 'Subscribe to the channel on the target page and turn on notifications.',
+            whatToDo: '1. Tap OPEN TARGET to open the channel.\n2. Press Subscribe and tap the bell icon.\n3. Record a short screen video showing the subscription.\n4. Send the recording on WhatsApp.',
+            rules: 'Unsubscribing after verification may lead to coin removal. One submission per account.',
+        },
+        {
+            ...base,
+            id: 'seed-task-3',
+            taskNumber: '3',
+            title: 'Follow the Instagram Page',
+            imageUrl: '/task-images/task-3.svg',
+            rewardCoins: 30,
+            targetUrl: 'https://www.instagram.com/',
+            description: 'Follow the Instagram page on the target link.',
+            whatToDo: '1. Tap OPEN TARGET to open the page.\n2. Press Follow.\n3. Record a short screen video showing you follow the page.\n4. Send the recording on WhatsApp.',
+            rules: 'The account must remain followed. Fake or inactive accounts may be rejected.',
+        },
+        {
+            ...base,
+            id: 'seed-task-4',
+            taskNumber: '4',
+            title: 'Share to WhatsApp Status',
+            imageUrl: '/task-images/task-4.svg',
+            rewardCoins: 25,
+            targetUrl: 'https://www.whatsapp.com/',
+            description: 'Share the content from the target page to your WhatsApp status for at least 2 hours.',
+            whatToDo: '1. Tap OPEN TARGET to view the content.\n2. Post it to your WhatsApp status.\n3. Keep it live for at least 2 hours.\n4. Record a screen video of your status and send it on WhatsApp.',
+            rules: 'The status must stay visible for 2 hours. Deleting early may lead to rejection.',
+        },
+        {
+            ...base,
+            id: 'seed-task-5',
+            taskNumber: '5',
+            title: 'Watch & Comment on a Reel',
+            imageUrl: '/task-images/task-5.svg',
+            rewardCoins: 35,
+            targetUrl: 'https://www.instagram.com/reels/',
+            description: 'Watch the reel on the target page and leave a genuine comment.',
+            whatToDo: '1. Tap OPEN TARGET to open the reel.\n2. Watch it fully.\n3. Leave a genuine comment related to the reel.\n4. Record a screen video showing your comment and send it on WhatsApp.',
+            rules: 'Spam or copy-paste comments may be rejected. One submission per account.',
+        },
+        {
+            ...base,
+            id: 'seed-task-6',
+            taskNumber: '6',
+            title: 'Visit Website for 60 Seconds',
+            imageUrl: '/task-images/task-6.svg',
+            rewardCoins: 20,
+            targetUrl: 'https://example.com/',
+            description: 'Visit the website on the target link and stay on the page for at least 60 seconds.',
+            whatToDo: '1. Tap OPEN TARGET to open the website.\n2. Stay on the page for at least 60 seconds.\n3. Scroll through the page.\n4. Record a screen video of the visit and send it on WhatsApp.',
+            rules: 'Closing the page early may lead to rejection. One submission per account.',
+        },
+    ];
+}

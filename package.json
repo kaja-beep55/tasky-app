@@ -1,20 +1,20 @@
 {
-  "name": "xlmx402earn",
+  "name": "tasky",
   "private": true,
   "license": "Apache-2.0",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx watch scripts/dev-api.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --import tsx --test tests/**/*.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@stellar/stellar-sdk": "^15.0.1",
     "@supabase/supabase-js": "^2.97.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.575.0",
-    "mixpanel-browser": "^2.74.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/mixpanel-browser": "^2.60.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -32,7 +31,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "pg": "^8.20.0",
+    "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
     "vite": "^7.3.1"
