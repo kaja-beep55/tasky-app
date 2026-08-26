@@ -57,7 +57,14 @@ export function assertSameOrigin(req: VercelRequest): void {
         throw new HttpError(403, 'Bad origin', 'BAD_ORIGIN');
     }
     if (originHost !== host) {
-        throw new HttpError(403, 'Cross-origin request rejected', 'BAD_ORIGIN');
+        // Dev convenience: Vite proxies /api from :12000 to :12001 — both
+        // localhost origins are the same site. Never relaxes in production
+        // (production serves frontend + API on one origin).
+        const bothLocalhost = originHost.startsWith('localhost') && host.startsWith('localhost');
+        const bothLoopback = /^127\.0\.0\.1/.test(originHost) && /^127\.0\.0\.1/.test(host);
+        if (!bothLocalhost && !bothLoopback) {
+            throw new HttpError(403, 'Cross-origin request rejected', 'BAD_ORIGIN');
+        }
     }
 }
 
