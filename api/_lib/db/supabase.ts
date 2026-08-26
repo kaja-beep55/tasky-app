@@ -5,9 +5,11 @@ import type {
 } from './types';
 
 // ── Supabase driver ───────────────────────────────────────────
-// Uses the SECRET key (bypasses RLS) — this driver must only ever
-// run inside serverless functions. All authorization decisions
-// are made in the API layer BEFORE calling these methods.
+// Prefers the SECRET key (bypasses RLS); falls back to the
+// publishable key in development. Either way this driver must only
+// ever run inside server-side functions — keys never reach the
+// frontend bundle. All authorization decisions are made in the API
+// layer BEFORE calling these methods.
 
 let client: SupabaseClient | null = null;
 

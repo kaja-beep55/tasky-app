@@ -134,5 +134,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 const port = parseInt(process.env.DEV_API_PORT || '12001', 10);
 server.listen(port, () => {
     console.log(`[dev-api] Tasky API listening on http://localhost:${port}`);
-    console.log(`[dev-api] database driver: ${process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY ? 'supabase' : 'local (json file)'}`);
+    import('../api/_lib/db').then(({ isSupabaseConfigured }) => {
+        console.log(`[dev-api] database driver: ${isSupabaseConfigured() ? 'supabase' : 'local (json file)'}`);
+    });
 });

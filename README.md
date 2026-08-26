@@ -13,8 +13,8 @@ over WhatsApp, and an admin credits coins after manual review.
 - **Frontend:** React 19 + TypeScript + Vite (mobile-first "pocket ledger" design)
 - **Backend:** Vercel-style serverless functions in `api/` (Node, zero external deps)
 - **Database:** pluggable driver —
-  - `local` (JSON file, default — zero credentials needed)
-  - `supabase` (activated automatically when `SUPABASE_URL` + `SUPABASE_SECRET_KEY` are set)
+  - `local` (JSON file — development/testing only, never used in production)
+  - `supabase` (activated when `SUPABASE_URL` + a key are set; required in production)
 
 ## Quick start
 
@@ -74,5 +74,33 @@ scripts/dev-api.ts   local API server used by `npm run dev:api`
 
 ## Environment variables
 
-See `.env.example` — every variable is documented there.
-**Never commit `.env`. Never put `SUPABASE_SECRET_KEY` in the frontend.**
+Copy `.env.example` to `.env` for local development. **Never commit `.env`.**
+
+### Backend-only secrets (set in the hosting provider, e.g. Vercel → Environment Variables)
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `SESSION_SECRET` | ✅ always | HMAC secret that signs user/admin session cookies |
+| `ADMIN_PANEL_CODE` | ✅ always | 10-digit code that unlocks the Admin Panel (server-side check) |
+| `RECOVERY_CODE_PEPPER` | ✅ always | Pepper for hashing recovery codes |
+| `SUPABASE_URL` | ✅ production | Project URL, e.g. `https://<project-ref>.supabase.co` |
+| `SUPABASE_SECRET_KEY` | ✅ production | `sb_secret_...` — **server-side only, bypasses RLS, never expose** |
+| `SUPABASE_PUBLISHABLE_KEY` | dev optional | `sb_publishable_...` — RLS-protected fallback when no secret key |
+
+### Public frontend configuration
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `VITE_WHATSAPP_NUMBER` | ✅ | Admin WhatsApp number (digits only, international format) — builds `wa.me` links |
+
+### Local development only
+
+| Variable | Purpose |
+|---|---|
+| `TASKY_LOCAL_DB_PATH` | Forces the local JSON-file driver (used by the test suite). **Ignored in production.** |
+
+### Driver selection rules
+
+- `SUPABASE_SECRET_KEY` is preferred; `SUPABASE_PUBLISHABLE_KEY` works as a dev fallback (RLS applies).
+- **Production** (`NODE_ENV=production` or on Vercel): if `SUPABASE_URL` + key are missing, the API fails loudly (`SUPABASE_NOT_CONFIGURED`) — it will **never** silently fall back to the local JSON driver.
+- Generate secrets with `openssl rand -hex 32`. Never place `SUPABASE_SECRET_KEY` in any `VITE_*` variable or client code.
