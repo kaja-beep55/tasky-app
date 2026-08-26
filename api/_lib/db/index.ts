@@ -9,7 +9,10 @@ import { createSupabaseDb } from './supabase';
 let instance: Database | null = null;
 
 export function isSupabaseConfigured(): boolean {
-    return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
+    // Use secret key when available (backend).
+    // Fall back to publishable key when only public keys exist (RLS-protected).
+    const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    return Boolean(process.env.SUPABASE_URL && key);
 }
 
 export function getDb(): Database {

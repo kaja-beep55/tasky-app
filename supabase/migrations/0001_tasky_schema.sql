@@ -3,6 +3,22 @@
 -- No crypto, no Stellar, no video storage. Metadata only.
 -- ══════════════════════════════════════════════════════════════
 
+-- Old XLM-era schema is fully replaced (destructive reset — old product removed).
+drop view if exists public.user_balances cascade;
+drop table if exists public.user_balances cascade;
+drop table if exists public.coin_ledger cascade;
+drop table if exists public.task_submissions cascade;
+drop table if exists public.tasks cascade;
+drop table if exists public.account_recovery cascade;
+drop table if exists public.admin_roles cascade;
+drop table if exists public.audit_logs cascade;
+drop table if exists public.app_settings cascade;
+drop table if exists public.profiles cascade;
+drop function if exists public.guard_profile_update() cascade;
+drop function if exists public.touch_updated_at() cascade;
+drop function if exists public.block_ledger_mutation() cascade;
+drop function if exists public.apply_coin_transaction(uuid,text,integer,text,uuid,uuid,text) cascade;
+
 create extension if not exists pgcrypto;
 
 -- ── profiles ─────────────────────────────────────────────────

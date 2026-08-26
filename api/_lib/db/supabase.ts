@@ -14,8 +14,8 @@ let client: SupabaseClient | null = null;
 function getClient(): SupabaseClient {
     if (client) return client;
     const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SECRET_KEY;
-    if (!url || !key) throw new Error('Supabase driver selected but SUPABASE_URL / SUPABASE_SECRET_KEY are not set');
+    const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error('Supabase driver selected but SUPABASE_URL / key are not set');
     client = createClient(url, key, { auth: { persistSession: false } });
     return client;
 }
