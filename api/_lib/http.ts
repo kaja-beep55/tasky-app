@@ -32,11 +32,33 @@ export function sendError(res: VercelResponse, err: unknown) {
 }
 
 export function parseBody<T>(req: VercelRequest): T {
+    assertSameOrigin(req);
     const body = req.body;
     if (body === null || typeof body !== 'object' || Array.isArray(body)) {
         throw new HttpError(400, 'Request body must be a JSON object', 'BAD_BODY');
     }
     return body as T;
+}
+
+// ── CSRF defense-in-depth ─────────────────────────────────────
+// SameSite=Lax cookies already block cross-site rides in modern
+// browsers. Additionally, when a browser sends an Origin header
+// on a state-changing request it MUST match our own host.
+// (Non-browser clients without Origin are unaffected.)
+export function assertSameOrigin(req: VercelRequest): void {
+    const origin = req.headers.origin;
+    if (!origin) return;
+    const host = req.headers.host;
+    if (typeof host !== 'string' || !host) return;
+    let originHost: string;
+    try {
+        originHost = new URL(origin).host;
+    } catch {
+        throw new HttpError(403, 'Bad origin', 'BAD_ORIGIN');
+    }
+    if (originHost !== host) {
+        throw new HttpError(403, 'Cross-origin request rejected', 'BAD_ORIGIN');
+    }
 }
 
 // ── Sessions ──────────────────────────────────────────────────

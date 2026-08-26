@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from '../_lib/db';
-import { ADMIN_COOKIE, clearSessionCookie, getSession, sendError } from '../_lib/http';
+import { ADMIN_COOKIE, assertSameOrigin, clearSessionCookie, getSession, sendError } from '../_lib/http';
 
 // POST /api/admin/lock — end the admin session (panel "lock/exit")
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -10,6 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        assertSameOrigin(req);
         const session = await getSession(req, ADMIN_COOKIE);
         if (session) {
             await getDb().deleteSession(session.tokenHash);

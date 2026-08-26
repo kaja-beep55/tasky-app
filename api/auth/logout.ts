@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from '../_lib/db';
-import { clearSessionCookie, getSession, sendError, SESSION_COOKIE } from '../_lib/http';
+import { assertSameOrigin, clearSessionCookie, getSession, sendError, SESSION_COOKIE } from '../_lib/http';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -9,6 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        assertSameOrigin(req);
         const session = await getSession(req, SESSION_COOKIE);
         if (session) {
             await getDb().deleteSession(session.tokenHash);
