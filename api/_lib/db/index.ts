@@ -9,8 +9,9 @@ import { createSupabaseDb } from './supabase';
 let instance: Database | null = null;
 
 export function isSupabaseConfigured(): boolean {
-    // Use secret key when available (backend).
-    // Fall back to publishable key when only public keys exist (RLS-protected).
+    // Formalise the driver selection so tests can force local mode even
+    // when the environment has a Supabase URL/key.
+    if (process.env.TASKY_LOCAL_DB_PATH) return false;
     const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
     return Boolean(process.env.SUPABASE_URL && key);
 }
