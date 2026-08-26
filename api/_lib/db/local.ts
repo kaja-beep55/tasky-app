@@ -344,16 +344,19 @@ export function createLocalDb(): Database {
 
         async listCoinTransactions(userId, limit) {
             return load().coinTransactions
-                .filter(t => t.userId === userId)
-                .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-                .slice(0, limit);
+                .map((txn, idx) => ({ txn, idx }))
+                .filter(r => r.txn.userId === userId)
+                .sort((a, b) => b.txn.createdAt.localeCompare(a.txn.createdAt) || b.idx - a.idx)
+                .slice(0, limit)
+                .map(r => r.txn);
         },
 
         async listAllCoinTransactions(limit) {
             return load().coinTransactions
-                .slice()
-                .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-                .slice(0, limit);
+                .map((txn, idx) => ({ txn, idx }))
+                .sort((a, b) => b.txn.createdAt.localeCompare(a.txn.createdAt) || b.idx - a.idx)
+                .slice(0, limit)
+                .map(r => r.txn);
         },
 
         async audit(entry) {

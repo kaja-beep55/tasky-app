@@ -317,14 +317,19 @@ export function createSupabaseDb(): Database {
 
         async listCoinTransactions(userId, limit) {
             const { data, error } = await db().from('coin_transactions').select('*')
-                .eq('user_id', userId).order('created_at', { ascending: false }).limit(limit);
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .order('seq', { ascending: false })
+                .limit(limit);
             if (error) fail('listCoinTransactions', error);
             return (data || []).map(mapTxn);
         },
 
         async listAllCoinTransactions(limit) {
             const { data, error } = await db().from('coin_transactions').select('*')
-                .order('created_at', { ascending: false }).limit(limit);
+                .order('created_at', { ascending: false })
+                .order('seq', { ascending: false })
+                .limit(limit);
             if (error) fail('listAllCoinTransactions', error);
             return (data || []).map(mapTxn);
         },

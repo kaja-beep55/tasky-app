@@ -31,8 +31,18 @@ export function Privacy() {
                 <li>To run your account, track coins, and verify task completions.</li>
                 <li>To keep the platform secure (rate limiting, audit logs).</li>
             </ul>
+            <h2>Consent</h2>
+            <p>By creating a profile you consent to the storage described above. You can withdraw consent at any time by requesting account deletion.</p>
+            <h2>Your rights &amp; data deletion</h2>
+            <ul>
+                <li>You may request a copy of your data or correction of wrong details via the Contact / Grievance page.</li>
+                <li>You may request deletion of your account and associated personal data at any time. Deletion removes your profile, login credentials, and recovery data. Coin transaction history is anonymised and retained for financial audit purposes.</li>
+                <li>Requests are processed within 30 days, in line with India's DPDP Act 2023 and GDPR principles (access, correction, erasure).</li>
+            </ul>
+            <h2>Data retention</h2>
+            <p>Profile and session data is kept while your account is active. Security and audit logs are retained for up to 12 months.</p>
             <h2>Contact</h2>
-            <p>For privacy questions, use the Contact / Grievance page.</p>
+            <p>For privacy questions or deletion requests, use the Contact / Grievance page.</p>
         </PolicyShell>
     );
 }
@@ -91,7 +101,8 @@ export function Contact() {
             <h2>Grievances</h2>
             <ul>
                 <li>Describe the issue clearly with your user ID and task number if relevant.</li>
-                <li>We review grievances and respond as soon as possible.</li>
+                <li>We review grievances and respond as soon as possible, and no later than 30 days (per India's DPDP Act grievance requirement).</li>
+                <li>For account or personal data deletion requests, say "delete my account" with your username; see the Privacy Policy for what is removed.</li>
             </ul>
         </PolicyShell>
     );
