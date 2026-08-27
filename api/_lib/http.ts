@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from './db';
-import type { Profile, Session } from './db/types';
-import { hashToken } from './security';
-import { getClientIp, isRateLimited } from './rateLimit';
+import { getDb } from './db/index.js';
+import type { Profile, Session } from './db/types.js';
+import { hashToken } from './security.js';
+import { getClientIp, isRateLimited } from './rateLimit.js';
 
 // ── HTTP helpers for Tasky API routes ─────────────────────────
 

@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import { ADMIN_COOKIE, HttpError, limitByIp, parseBody, sendError, setSessionCookie } from '../../_lib/http';
-import { getClientIp } from '../../_lib/rateLimit';
-import { assertNotLocked, recordFailure, recordSuccess } from '../../_lib/lockout';
-import { generateSessionToken, hashToken, safeEqual } from '../../_lib/security';
-import { asString, ValidationError } from '../../_lib/validate';
+import { getDb } from '../../_lib/db/index.js';
+import { ADMIN_COOKIE, HttpError, limitByIp, parseBody, sendError, setSessionCookie } from '../../_lib/http.js';
+import { getClientIp } from '../../_lib/rateLimit.js';
+import { assertNotLocked, recordFailure, recordSuccess } from '../../_lib/lockout.js';
+import { generateSessionToken, hashToken, safeEqual } from '../../_lib/security.js';
+import { asString, ValidationError } from '../../_lib/validate.js';
 
 const ADMIN_SESSION_TTL_SEC = 30 * 60; // 30 minutes
 

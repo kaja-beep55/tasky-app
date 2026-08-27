@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { HttpError, limitByIp, parseBody, requireUser, sendError } from '../_lib/http';
-import { asTaskNumber, ValidationError } from '../_lib/validate';
+import { getDb } from '../_lib/db/index.js';
+import { HttpError, limitByIp, parseBody, requireUser, sendError } from '../_lib/http.js';
+import { asTaskNumber, ValidationError } from '../_lib/validate.js';
 
 // POST /api/submissions { taskNumber } — register a pending submission
 //   when the user taps "Send video on WhatsApp". Metadata only:

@@ -4,8 +4,8 @@ import { randomUUID } from 'node:crypto';
 import type {
     AuditLog, AuthIdentity, CoinTransaction, Database,
     Profile, RecoveryRecord, Session, Submission, Task,
-} from './types';
-import { seedTasks } from './seedTasks';
+} from './types.js';
+import { seedTasks } from './seedTasks.js';
 
 // ── Local JSON-file driver ────────────────────────────────────
 // Used for local development and pre-Supabase testing. All

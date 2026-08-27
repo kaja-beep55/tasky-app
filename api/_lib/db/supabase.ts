@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
     AuditLog, CoinTransaction, Database,
     Profile, Submission, SubmissionStatus, Task, TaskStatus,
-} from './types';
+} from './types.js';
 
 // ── Supabase driver ───────────────────────────────────────────
 // Prefers the SECRET key (bypasses RLS); falls back to the
@@ -292,7 +292,7 @@ export function createSupabaseDb(): Database {
             if (error) fail('verifyLogin', error);
             const row = Array.isArray(data) ? data[0] : data;
             if (!row) return null;
-            const { verifyPassword } = await import('../security');
+            const { verifyPassword } = await import('../security.js');
             if (!verifyPassword(password, row.password_hash)) return null;
             if (row.status !== 'active') throw new Error('SUSPENDED');
             const profile = await this.getProfile(row.user_id);

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../../_lib/db';
-import { limitByIp, parseBody, requireAdmin, sendError } from '../../../_lib/http';
-import { validateTaskPayload } from '../../../_lib/taskInput';
-import { ValidationError } from '../../../_lib/validate';
+import { getDb } from '../../../_lib/db/index.js';
+import { limitByIp, parseBody, requireAdmin, sendError } from '../../../_lib/http.js';
+import { validateTaskPayload } from '../../../_lib/taskInput.js';
+import { ValidationError } from '../../../_lib/validate.js';
 
 // GET  /api/admin/tasks        — list every task (any status)
 // POST /api/admin/tasks        — create a new task (unique taskNumber)

@@ -1,4 +1,4 @@
-import type { Task } from './types';
+import type { Task } from './types.js';
 
 // Seed tasks for the local driver. Once Supabase is connected,
 // tasks live in the `tasks` table and this file is unused.

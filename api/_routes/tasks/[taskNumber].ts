@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import { HttpError, limitByIp, sendError } from '../../_lib/http';
-import { asTaskNumber, ValidationError } from '../../_lib/validate';
+import { getDb } from '../../_lib/db/index.js';
+import { HttpError, limitByIp, sendError } from '../../_lib/http.js';
+import { asTaskNumber, ValidationError } from '../../_lib/validate.js';
 
 // GET /api/tasks/:taskNumber — public detail of a published task
 export default async function handler(req: VercelRequest, res: VercelResponse) {

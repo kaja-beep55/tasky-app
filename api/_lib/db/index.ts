@@ -1,6 +1,6 @@
-import type { Database } from './types';
-import { createLocalDb } from './local';
-import { createSupabaseDb } from './supabase';
+import type { Database } from './types.js';
+import { createLocalDb } from './local.js';
+import { createSupabaseDb } from './supabase.js';
 
 // ── Driver selection ──────────────────────────────────────────
 // SUPABASE_SECRET_KEY is preferred (server-side only, bypasses RLS;

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import { limitByIp, requireAdmin, sendError } from '../../_lib/http';
-import { asString, ValidationError } from '../../_lib/validate';
+import { getDb } from '../../_lib/db/index.js';
+import { limitByIp, requireAdmin, sendError } from '../../_lib/http.js';
+import { asString, ValidationError } from '../../_lib/validate.js';
 
 // GET /api/admin/users?query=…
 // Search by user number, user id, username, or name.

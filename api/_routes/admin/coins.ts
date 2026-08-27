@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import type { CoinActionType } from '../../_lib/db/types';
-import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../../_lib/http';
-import { asEnum, asIdempotencyKey, asInt, asString, ValidationError } from '../../_lib/validate';
+import { getDb } from '../../_lib/db/index.js';
+import type { CoinActionType } from '../../_lib/db/types.js';
+import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../../_lib/http.js';
+import { asEnum, asIdempotencyKey, asInt, asString, ValidationError } from '../../_lib/validate.js';
 
 const ACTIONS = ['add', 'deduct', 'reset'] as const;
 type Action = (typeof ACTIONS)[number];

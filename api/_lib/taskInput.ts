@@ -1,5 +1,5 @@
-import type { Task, TaskStatus } from './db/types';
-import { asEnum, asHttpsUrl, asInt, asOptionalString, asString, asTaskNumber } from './validate';
+import type { Task, TaskStatus } from './db/types.js';
+import { asEnum, asHttpsUrl, asInt, asOptionalString, asString, asTaskNumber } from './validate.js';
 
 // Shared validation for admin task create/update payloads.
 

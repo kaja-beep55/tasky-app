@@ -1,5 +1,5 @@
-import { getDb } from './db';
-import { HttpError } from './http';
+import { getDb } from './db/index.js';
+import { HttpError } from './http.js';
 
 // ── Failed-attempt tracking with temporary lock ───────────────
 // Counters persist in the app_settings KV so they survive

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import { limitByIp, sendError } from '../../_lib/http';
+import { getDb } from '../../_lib/db/index.js';
+import { limitByIp, sendError } from '../../_lib/http.js';
 
 // GET /api/tasks — public list of published tasks
 export default async function handler(req: VercelRequest, res: VercelResponse) {
