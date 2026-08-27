@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { HttpError, limitByIp, parseBody, sendError, setSessionCookie, SESSION_COOKIE } from '../_lib/http';
-import { generateRecoveryCode, generateSessionToken, hashPassword, hashRecoveryCode, hashToken } from '../_lib/security';
-import { asPassword, asString, ValidationError } from '../_lib/validate';
+import { getDb } from '../../_lib/db';
+import { HttpError, limitByIp, parseBody, sendError, setSessionCookie, SESSION_COOKIE } from '../../_lib/http';
+import { generateRecoveryCode, generateSessionToken, hashPassword, hashRecoveryCode, hashToken } from '../../_lib/security';
+import { asPassword, asString, ValidationError } from '../../_lib/validate';
 
 const USER_SESSION_TTL_SEC = 30 * 24 * 60 * 60; // 30 days
 

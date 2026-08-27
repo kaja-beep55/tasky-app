@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { HttpError, limitByIp, parseBody, sendError } from '../_lib/http';
-import { assertNotLocked, recordFailure, recordSuccess } from '../_lib/lockout';
-import { hashPassword, hashRecoveryCode, safeEqual } from '../_lib/security';
-import { asLoginIdentifier, asPassword, asString, ValidationError } from '../_lib/validate';
+import { getDb } from '../../_lib/db';
+import { HttpError, limitByIp, parseBody, sendError } from '../../_lib/http';
+import { assertNotLocked, recordFailure, recordSuccess } from '../../_lib/lockout';
+import { hashPassword, hashRecoveryCode, safeEqual } from '../../_lib/security';
+import { asLoginIdentifier, asPassword, asString, ValidationError } from '../../_lib/validate';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {

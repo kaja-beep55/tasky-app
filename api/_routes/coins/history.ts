@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { requireUser, sendError } from '../_lib/http';
+import { getDb } from '../../_lib/db';
+import { requireUser, sendError } from '../../_lib/http';
 
 // GET /api/coins/history — the logged-in user's own coin history.
 // Users can ONLY ever see their own transactions.

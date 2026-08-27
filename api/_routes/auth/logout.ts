@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { assertSameOrigin, clearSessionCookie, getSession, sendError, SESSION_COOKIE } from '../_lib/http';
+import { getDb } from '../../_lib/db';
+import { assertSameOrigin, clearSessionCookie, getSession, sendError, SESSION_COOKIE } from '../../_lib/http';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {

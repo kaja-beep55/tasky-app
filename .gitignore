@@ -32,3 +32,4 @@ dist-ssr
 # Local development database (Tasky JSON driver)
 .tasky-local/
 supabase/.temp
+.env*

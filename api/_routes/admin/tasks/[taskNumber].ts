@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../../_lib/db';
-import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../../_lib/http';
-import { validateTaskPatch } from '../../_lib/taskInput';
-import { asTaskNumber, ValidationError } from '../../_lib/validate';
+import { getDb } from '../../../_lib/db';
+import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../../../_lib/http';
+import { validateTaskPatch } from '../../../_lib/taskInput';
+import { asTaskNumber, ValidationError } from '../../../_lib/validate';
 
 // PATCH  /api/admin/tasks/:taskNumber — edit a task
 // DELETE /api/admin/tasks/:taskNumber — archive a task (soft delete;

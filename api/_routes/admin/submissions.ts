@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db';
-import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../_lib/http';
-import { asEnum, asOptionalString, asString, ValidationError } from '../_lib/validate';
+import { getDb } from '../../_lib/db';
+import { HttpError, limitByIp, parseBody, requireAdmin, sendError } from '../../_lib/http';
+import { asEnum, asOptionalString, asString, ValidationError } from '../../_lib/validate';
 
 // GET  /api/admin/submissions?status=pending — list submissions (enriched)
 // POST /api/admin/submissions { submissionId, decision, rejectionReason? }
