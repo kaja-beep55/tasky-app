@@ -13,6 +13,14 @@ import type {
 
 let client: SupabaseClient | null = null;
 
+// Per-request session hash, set by the API layer (http.ts) so RLS
+// policies / definer functions (migration 0009) can authorize
+// operations performed with the publishable key.
+let requestSessionTokenHash: string | null = null;
+export function setRequestSessionTokenHash(hash: string | null): void {
+    requestSessionTokenHash = hash;
+}
+
 function getClient(): SupabaseClient {
     if (client) return client;
     const url = process.env.SUPABASE_URL;
@@ -20,6 +28,31 @@ function getClient(): SupabaseClient {
     if (!url || !key) throw new Error('Supabase driver selected but SUPABASE_URL / key are not set');
     client = createClient(url, key, { auth: { persistSession: false } });
     return client;
+}
+
+// Client carrying the per-request session header. Cached per hash.
+const authedClients = new Map<string, SupabaseClient>();
+function dbAuthed(): SupabaseClient {
+    if (!requestSessionTokenHash) return getClient();
+    const cached = authedClients.get(requestSessionTokenHash);
+    if (cached) return cached;
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error('Supabase driver selected but SUPABASE_URL / key are not set');
+    const c = createClient(url, key, {
+        auth: { persistSession: false },
+        global: { headers: { 'x-tasky-session': requestSessionTokenHash } },
+    });
+    authedClients.set(requestSessionTokenHash, c);
+    return c;
+}
+
+// True when an error means "no direct table access with this key" and
+// the operation should go through the definer functions (0009).
+function needsRpc(error: { code?: string; message?: string } | null): boolean {
+    if (!error) return false;
+    return error.code === '42501'
+        || /permission denied|row-level security/i.test(error.message || '');
 }
 
 function fail(context: string, error: { message: string } | null): never {
@@ -41,7 +74,7 @@ function mapTask(r: any): Task {
 function mapProfile(r: any): Profile {
     return {
         id: r.id, userNumber: r.user_number, username: r.username, name: r.name,
-        country: r.country, state: r.state, coins: r.coins, status: r.status,
+        country: r.country, state: r.state, coins: r.coin_balance, status: r.status,
         createdAt: r.created_at,
     };
 }
@@ -74,7 +107,7 @@ function mapAudit(r: any): AuditLog {
 }
 
 export function createSupabaseDb(): Database {
-    const db = () => getClient();
+    const db = () => dbAuthed();
 
     return {
         async createProfile(input) {
@@ -88,6 +121,20 @@ export function createSupabaseDb(): Database {
             if (error) {
                 if (error.code === '23505') throw new Error('USERNAME_TAKEN');
                 fail('createProfile', error);
+            }
+            return mapProfile(data);
+        },
+
+        // Full signup in one atomic call (publishable-key mode; see 0009).
+        async signupComplete(input) {
+            const { data, error } = await db().rpc('tasky_signup', {
+                p_username: input.username, p_name: input.name,
+                p_country: input.country, p_state: input.state,
+                p_password_hash: input.passwordHash, p_recovery_hash: input.recoveryHash,
+            });
+            if (error) {
+                if (error.code === '23505') throw new Error('USERNAME_TAKEN');
+                fail('signupComplete', error);
             }
             return mapProfile(data);
         },
@@ -128,7 +175,7 @@ export function createSupabaseDb(): Database {
         },
 
         async nextUserNumber() {
-            const { data, error } = await db().rpc('peek_next_user_number');
+            const { data, error } = await db().rpc('tasky_peek_user_number');
             if (error) fail('nextUserNumber', error);
             return data as number;
         },
@@ -142,9 +189,16 @@ export function createSupabaseDb(): Database {
         },
 
         async getIdentity(userId) {
+            // With the publishable key the password hash is never
+            // selectable; login verification goes through verifyLogin
+            // (tasky_login_lookup). With the secret key the direct
+            // read still works.
             const { data, error } = await db().from('auth_identities').select('*')
                 .eq('user_id', userId).maybeSingle();
-            if (error) fail('getIdentity', error);
+            if (error) {
+                if (needsRpc(error)) return null;
+                fail('getIdentity', error);
+            }
             return data ? {
                 userId: data.user_id, passwordHash: data.password_hash,
                 createdAt: data.created_at, updatedAt: data.updated_at,
@@ -170,14 +224,35 @@ export function createSupabaseDb(): Database {
                 token_hash: session.tokenHash, user_id: session.userId,
                 scope: session.scope, expires_at: session.expiresAt,
             });
-            if (error) fail('createSession', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_create_session', {
+                        p_token_hash: session.tokenHash, p_user_id: session.userId,
+                        p_scope: session.scope, p_expires_at: session.expiresAt,
+                    });
+                    if (r.error) fail('createSession', r.error);
+                    return;
+                }
+                fail('createSession', error);
+            }
         },
 
         async getSession(tokenHash) {
             const { data, error } = await db().from('sessions').select('*')
                 .eq('token_hash', tokenHash).gt('expires_at', new Date().toISOString())
                 .maybeSingle();
-            if (error) fail('getSession', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_get_session', { p_token_hash: tokenHash });
+                    if (r.error) fail('getSession', r.error);
+                    const row = Array.isArray(r.data) ? r.data[0] : r.data;
+                    return row ? {
+                        tokenHash: row.token_hash, userId: row.user_id, scope: row.scope,
+                        expiresAt: row.expires_at, createdAt: row.created_at,
+                    } : null;
+                }
+                fail('getSession', error);
+            }
             return data ? {
                 tokenHash: data.token_hash, userId: data.user_id, scope: data.scope,
                 expiresAt: data.expires_at, createdAt: data.created_at,
@@ -186,18 +261,63 @@ export function createSupabaseDb(): Database {
 
         async deleteSession(tokenHash) {
             const { error } = await db().from('sessions').delete().eq('token_hash', tokenHash);
-            if (error) fail('deleteSession', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_delete_session', { p_token_hash: tokenHash });
+                    if (r.error) fail('deleteSession', r.error);
+                    return;
+                }
+                fail('deleteSession', error);
+            }
         },
 
         async deleteUserSessions(userId) {
             const { error } = await db().from('sessions').delete().eq('user_id', userId);
-            if (error) fail('deleteUserSessions', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_delete_user_sessions', { p_user_id: userId });
+                    if (r.error) fail('deleteUserSessions', r.error);
+                    return;
+                }
+                fail('deleteUserSessions', error);
+            }
+        },
+
+        // ── publishable-key helpers (migration 0009) ────────────
+        // With the publishable key password/recovery hashes are never
+        // selectable; verification happens against tasky_login_lookup /
+        // tasky_reset_password inside the database.
+        async verifyLogin(identifier, password) {
+            const { data, error } = await db().rpc('tasky_login_lookup', { p_identifier: identifier });
+            if (error) fail('verifyLogin', error);
+            const row = Array.isArray(data) ? data[0] : data;
+            if (!row) return null;
+            const { verifyPassword } = await import('../security');
+            if (!verifyPassword(password, row.password_hash)) return null;
+            if (row.status !== 'active') throw new Error('SUSPENDED');
+            const profile = await this.getProfile(row.user_id);
+            return profile ? { profile } : null;
+        },
+
+        async recoverWithCode(userId, codeHash, newPasswordHash) {
+            const { data, error } = await db().rpc('tasky_reset_password', {
+                p_user_id: userId, p_code_hash: codeHash, p_new_password_hash: newPasswordHash,
+            });
+            if (error) fail('recoverWithCode', error);
+            return data === true;
         },
 
         async pruneExpiredSessions() {
             const { error } = await db().from('sessions').delete()
                 .lt('expires_at', new Date().toISOString());
-            if (error) fail('pruneExpiredSessions', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_prune_sessions');
+                    if (r.error) fail('pruneExpiredSessions', r.error);
+                    return;
+                }
+                fail('pruneExpiredSessions', error);
+            }
         },
 
         async listPublishedTasks() {
@@ -229,6 +349,20 @@ export function createSupabaseDb(): Database {
             }).select().single();
             if (error) {
                 if (error.code === '23505') throw new Error('DUPLICATE_TASK_NUMBER');
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_create_task', {
+                        p_task_number: input.taskNumber, p_title: input.title,
+                        p_image_url: input.imageUrl, p_target_url: input.targetUrl,
+                        p_description: input.description, p_what_to_do: input.whatToDo,
+                        p_rules: input.rules, p_reward_coins: input.rewardCoins,
+                        p_status: input.status,
+                    });
+                    if (r.error) {
+                        if (r.error.code === '23505') throw new Error('DUPLICATE_TASK_NUMBER');
+                        fail('createTask', r.error);
+                    }
+                    return mapTask(r.data);
+                }
                 fail('createTask', error);
             }
             return mapTask(data);
@@ -246,7 +380,20 @@ export function createSupabaseDb(): Database {
             if (patch.status !== undefined) row.status = patch.status;
             const { data, error } = await db().from('tasks').update(row)
                 .eq('task_number', taskNumber).select().maybeSingle();
-            if (error) fail('updateTask', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_update_task', {
+                        p_task_number: taskNumber,
+                        p_title: patch.title, p_image_url: patch.imageUrl,
+                        p_target_url: patch.targetUrl, p_description: patch.description,
+                        p_what_to_do: patch.whatToDo, p_rules: patch.rules,
+                        p_reward_coins: patch.rewardCoins, p_status: patch.status,
+                    });
+                    if (r.error) fail('updateTask', r.error);
+                    return r.data ? mapTask(r.data) : null;
+                }
+                fail('updateTask', error);
+            }
             return data ? mapTask(data) : null;
         },
 
@@ -254,7 +401,14 @@ export function createSupabaseDb(): Database {
             const { data, error } = await db().from('tasks')
                 .update({ status: 'archived', updated_at: new Date().toISOString() })
                 .eq('task_number', taskNumber).select().maybeSingle();
-            if (error) fail('archiveTask', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_archive_task', { p_task_number: taskNumber });
+                    if (r.error) fail('archiveTask', r.error);
+                    return r.data ? mapTask(r.data) : null;
+                }
+                fail('archiveTask', error);
+            }
             return data ? mapTask(data) : null;
         },
 
@@ -264,6 +418,11 @@ export function createSupabaseDb(): Database {
             if (error) {
                 // Unique violation = already submitted → idempotent no-op
                 if (error.code === '23505') return null;
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_create_submission', { p_user_id: userId, p_task_id: taskId });
+                    if (r.error) fail('createSubmission', r.error);
+                    return r.data ? mapSubmission(r.data) : null;
+                }
                 fail('createSubmission', error);
             }
             return data ? mapSubmission(data) : null;
@@ -292,20 +451,33 @@ export function createSupabaseDb(): Database {
                     reviewed_by: reviewedBy, rejection_reason: rejectionReason,
                 })
                 .eq('id', id).eq('status', 'pending').select().maybeSingle();
-            if (error) fail('reviewSubmission', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_review_submission', {
+                        p_submission_id: id, p_status: status,
+                        p_reviewed_by: reviewedBy, p_rejection_reason: rejectionReason,
+                    });
+                    if (r.error) fail('reviewSubmission', r.error);
+                    return r.data ? mapSubmission(r.data) : null;
+                }
+                fail('reviewSubmission', error);
+            }
             return data ? mapSubmission(data) : null;
         },
 
         async applyCoinTransaction(input) {
             // Atomicity + idempotency enforced inside the DB function
             // (unique idempotency_key, row-level lock on the profile).
+            // The live DB function (0001) applies the sign itself for
+            // admin_deduct, so always send a positive amount.
+            const amount = input.actionType === 'admin_deduct' ? Math.abs(input.amount) : input.amount;
             const { data, error } = await db().rpc('apply_coin_transaction', {
                 p_user_id: input.userId,
                 p_action_type: input.actionType,
-                p_amount: input.amount,
+                p_amount: amount,
                 p_reason: input.reason,
                 p_admin_id: input.adminId,
-                p_reference_task_id: input.referenceTaskId,
+                p_task_id: input.referenceTaskId,
                 p_idempotency_key: input.idempotencyKey,
             });
             if (error) {
@@ -342,7 +514,14 @@ export function createSupabaseDb(): Database {
                 action: entry.action, target_type: entry.targetType,
                 target_id: entry.targetId, meta: entry.meta,
             });
-            if (error) console.error('[db:supabase] audit write failed:', error.message);
+            if (error) {
+                const r = await db().rpc('tasky_audit', {
+                    p_actor_user_id: entry.actorUserId, p_actor_type: entry.actorType,
+                    p_action: entry.action, p_target_type: entry.targetType,
+                    p_target_id: entry.targetId, p_meta: entry.meta,
+                });
+                if (r.error) console.error('[db:supabase] audit write failed:', r.error.message);
+            }
         },
 
         async listAudit(limit) {
@@ -355,13 +534,27 @@ export function createSupabaseDb(): Database {
         async getSetting(key) {
             const { data, error } = await db().from('app_settings').select('value')
                 .eq('key', key).maybeSingle();
-            if (error) fail('getSetting', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_get_setting', { p_key: key });
+                    if (r.error) fail('getSetting', r.error);
+                    return r.data ?? null;
+                }
+                fail('getSetting', error);
+            }
             return data?.value ?? null;
         },
 
         async setSetting(key, value) {
             const { error } = await db().from('app_settings').upsert({ key, value });
-            if (error) fail('setSetting', error);
+            if (error) {
+                if (needsRpc(error)) {
+                    const r = await db().rpc('tasky_set_setting', { p_key: key, p_value: value });
+                    if (r.error) fail('setSetting', r.error);
+                    return;
+                }
+                fail('setSetting', error);
+            }
         },
     };
 }

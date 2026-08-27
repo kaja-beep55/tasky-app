@@ -87,7 +87,14 @@ function extractToken(req: VercelRequest, cookieName: string): string | null {
 export async function getSession(req: VercelRequest, cookieName: string): Promise<Session | null> {
     const token = extractToken(req, cookieName);
     if (!token) return null;
-    return getDb().getSession(hashToken(token));
+    const tokenHash = hashToken(token);
+    // Propagate the session hash so RLS policies / definer functions
+    // (migration 0009) can authorize publishable-key operations.
+    try {
+        const mod = await import('./db/supabase');
+        mod.setRequestSessionTokenHash(tokenHash);
+    } catch { /* local driver — no-op */ }
+    return getDb().getSession(tokenHash);
 }
 
 export async function requireUser(req: VercelRequest): Promise<{ session: Session; profile: Profile }> {

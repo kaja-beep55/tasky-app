@@ -26,6 +26,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const profile = /^\d+$/.test(identifier)
             ? (await db.getProfileByUserNumber(parseInt(identifier, 10))) || (await db.getProfileByUsername(identifier))
             : await db.getProfileByUsername(identifier);
+
+        // Publishable-key mode: the recovery code hash is never
+        // selectable; verify + rotate password inside the database.
+        if ('recoverWithCode' in db && typeof (db as { recoverWithCode?: unknown }).recoverWithCode === 'function') {
+            const presentedHash = hashRecoveryCode(recoveryCode);
+            const okRpc = profile
+                ? await (db as unknown as { recoverWithCode(u: string, c: string, p: string): Promise<boolean> })
+                    .recoverWithCode(profile.id, presentedHash, hashPassword(newPassword))
+                : false;
+            if (!profile || !okRpc) {
+                await recordFailure(lockKey);
+                await db.audit({
+                    actorUserId: profile?.id ?? null, actorType: 'system', action: 'recovery_failed',
+                    targetType: 'profile', targetId: profile?.id ?? null, meta: null,
+                });
+                throw new HttpError(401, 'Invalid recovery details', 'BAD_RECOVERY');
+            }
+            await recordSuccess(lockKey);
+            await db.audit({
+                actorUserId: profile.id, actorType: 'user', action: 'recovery_success',
+                targetType: 'profile', targetId: profile.id, meta: null,
+            });
+            return res.status(200).json({ ok: true });
+        }
+
         const recovery = profile ? await db.getRecovery(profile.id) : null;
 
         const presented = hashRecoveryCode(recoveryCode);

@@ -39,22 +39,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         if (!username) throw new HttpError(500, 'Could not allocate a username. Please retry.', 'USERNAME_ALLOC_FAILED');
 
-        const profile = await db.createProfile({ name, country, state, username });
-
-        await db.setIdentity({
-            userId: profile.id,
-            passwordHash: hashPassword(password),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        });
-
         // Recovery code: shown to the user exactly once, stored hashed.
         const recoveryCode = generateRecoveryCode();
-        await db.setRecovery({
-            userId: profile.id,
-            codeHash: hashRecoveryCode(recoveryCode),
-            createdAt: new Date().toISOString(),
-        });
+
+        let profile;
+        if ('signupComplete' in db && typeof (db as { signupComplete?: unknown }).signupComplete === 'function') {
+            // Atomic signup inside the database (publishable-key mode, 0009).
+            profile = await (db as unknown as { signupComplete(i: { name: string; country: string; state: string; username: string; passwordHash: string; recoveryHash: string }): Promise<import('../_lib/db/types').Profile> }).signupComplete({
+                name, country, state, username,
+                passwordHash: hashPassword(password),
+                recoveryHash: hashRecoveryCode(recoveryCode),
+            });
+        } else {
+            profile = await db.createProfile({ name, country, state, username });
+            await db.setIdentity({
+                userId: profile.id,
+                passwordHash: hashPassword(password),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
+            await db.setRecovery({
+                userId: profile.id,
+                codeHash: hashRecoveryCode(recoveryCode),
+                createdAt: new Date().toISOString(),
+            });
+        }
 
         const token = generateSessionToken();
         await db.createSession({

@@ -34,11 +34,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await assertNotLocked(lockKey);
 
         const db = getDb();
-        const profile = await findProfile(identifier);
-        const identity = profile ? await db.getIdentity(profile.id) : null;
+        let profile: Profile | null;
+        let identity = null;
+        let ok: boolean;
 
-        // Same work either way — no user-enumeration via timing or message.
-        const ok = identity ? verifyPassword(password, identity.passwordHash) : verifyPassword(password, DUMMY_HASH);
+        // Publishable-key mode: password hashes are never selectable and
+        // profiles may not be readable without a session; verification
+        // happens via the database (tasky_login_lookup) and is
+        // authoritative — no profile pre-lookup needed.
+        if ('verifyLogin' in db && typeof (db as { verifyLogin?: unknown }).verifyLogin === 'function') {
+            let r: { profile: Profile } | null = null;
+            try {
+                r = await (db as unknown as { verifyLogin(i: string, p: string): Promise<{ profile: Profile } | null> }).verifyLogin(identifier, password);
+            } catch (e) {
+                if (e instanceof Error && e.message === 'SUSPENDED') {
+                    throw new HttpError(403, 'Account is suspended. Contact support.', 'SUSPENDED');
+                }
+                throw e;
+            }
+            if (!r) {
+                await recordFailure(lockKey);
+                throw new HttpError(401, 'Invalid username or password', 'BAD_CREDENTIALS');
+            }
+            profile = r.profile;
+            identity = { userId: profile.id, passwordHash: '', createdAt: '', updatedAt: '' };
+            ok = true;
+        } else {
+            profile = await findProfile(identifier);
+            identity = profile ? await db.getIdentity(profile.id) : null;
+            // Same work either way — no user-enumeration via timing or message.
+            ok = identity ? verifyPassword(password, identity.passwordHash) : verifyPassword(password, DUMMY_HASH);
+        }
 
         if (!profile || !identity || !ok) {
             await recordFailure(lockKey);
