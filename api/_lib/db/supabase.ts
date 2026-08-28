@@ -397,7 +397,6 @@ export function createSupabaseDb(): Database {
             if (patch.status !== undefined) row.status = patch.status;
             const { data, error } = await db().from('tasks').update(row)
                 .eq('task_number', taskNumber).select().maybeSingle();
-            console.error('[dbg-ut]', taskNumber, 'err=', error ? (error.code ?? error.message) : 'none', 'rows=', data ? 'yes' : 'null', 'hash=', currentSessionHash()?.slice(0,8) ?? 'none');
             if (error) {
                 if (needsRpc(error)) {
                     const r = await db().rpc('tasky_update_task', {
