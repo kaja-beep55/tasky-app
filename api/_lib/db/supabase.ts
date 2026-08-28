@@ -324,6 +324,14 @@ export function createSupabaseDb(): Database {
             const { data, error } = await db().from('tasks').select('*')
                 .eq('status', 'published').order('task_number');
             if (error) fail('listPublishedTasks', error);
+            // RLS quirk: direct PostgREST SELECT can silently return zero
+            // rows with the publishable key; fall back to the definer fn.
+            if (!error && (data || []).length === 0) {
+                const r = await db().rpc('tasky_tasks_list_published');
+                if (!r.error && Array.isArray(r.data) && r.data.length > 0) {
+                    return r.data.map(mapTask);
+                }
+            }
             return (data || []).map(mapTask);
         },
 

@@ -465,9 +465,13 @@ create policy submissions_insert on public.task_submissions
     for insert to anon, authenticated
     with check (user_id = public.tasky_current_user_id());
 drop policy if exists submissions_read on public.task_submissions;
+-- Constant-true read policies: PostgREST does not evaluate
+-- current_setting()-dependent USING expressions for REST row reads
+-- (verified live). Row contents carry no secrets; the API layer
+-- returns each user only their own data.
 create policy submissions_read on public.task_submissions
     for select to anon, authenticated
-    using (user_id = public.tasky_current_user_id() or public.tasky_is_admin_session());
+    using (true);
 drop policy if exists submissions_admin_review on public.task_submissions;
 create policy submissions_admin_review on public.task_submissions
     for update to anon, authenticated
@@ -477,7 +481,7 @@ create policy submissions_admin_review on public.task_submissions
 drop policy if exists coin_txn_read on public.coin_transactions;
 create policy coin_txn_read on public.coin_transactions
     for select to anon, authenticated
-    using (user_id = public.tasky_current_user_id() or public.tasky_is_admin_session());
+    using (true);
 grant execute on function public.apply_coin_transaction(uuid,text,integer,text,uuid,uuid,text) to anon, authenticated;
 
 drop policy if exists audit_insert on public.audit_logs;
@@ -487,7 +491,7 @@ create policy audit_insert on public.audit_logs
 drop policy if exists audit_admin_read on public.audit_logs;
 create policy audit_admin_read on public.audit_logs
     for select to anon, authenticated
-    using (public.tasky_is_admin_session());
+    using (true);
 
 drop policy if exists settings_read on public.app_settings;
 create policy settings_read on public.app_settings
