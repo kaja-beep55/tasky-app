@@ -16,9 +16,17 @@ let client: SupabaseClient | null = null;
 // Per-request session hash, set by the API layer (http.ts) so RLS
 // policies / definer functions (migration 0009) can authorize
 // operations performed with the publishable key.
+// Global fallback registry — in bundled serverless code the same
+// module can be instantiated twice under different specifiers, so a
+// plain module-level variable is not reliable.
+const REG = globalThis as unknown as { __taskySessionHash?: string | null };
 let requestSessionTokenHash: string | null = null;
 export function setRequestSessionTokenHash(hash: string | null): void {
     requestSessionTokenHash = hash;
+    REG.__taskySessionHash = hash;
+}
+function currentSessionHash(): string | null {
+    return requestSessionTokenHash ?? REG.__taskySessionHash ?? null;
 }
 
 function getClient(): SupabaseClient {
@@ -33,17 +41,18 @@ function getClient(): SupabaseClient {
 // Client carrying the per-request session header. Cached per hash.
 const authedClients = new Map<string, SupabaseClient>();
 function dbAuthed(): SupabaseClient {
-    if (!requestSessionTokenHash) return getClient();
-    const cached = authedClients.get(requestSessionTokenHash);
+    const h = currentSessionHash();
+    if (!h) return getClient();
+    const cached = authedClients.get(h);
     if (cached) return cached;
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
     if (!url || !key) throw new Error('Supabase driver selected but SUPABASE_URL / key are not set');
     const c = createClient(url, key, {
         auth: { persistSession: false },
-        global: { headers: { 'x-tasky-session': requestSessionTokenHash } },
+        global: { headers: { 'x-tasky-session': h } },
     });
-    authedClients.set(requestSessionTokenHash, c);
+    authedClients.set(h, c);
     return c;
 }
 
@@ -388,7 +397,7 @@ export function createSupabaseDb(): Database {
             if (patch.status !== undefined) row.status = patch.status;
             const { data, error } = await db().from('tasks').update(row)
                 .eq('task_number', taskNumber).select().maybeSingle();
-            console.error('[dbg-ut]', taskNumber, 'err=', error ? (error.code ?? error.message) : 'none', 'rows=', data ? 'yes' : 'null', 'hash=', requestSessionTokenHash?.slice(0,8) ?? 'none');
+            console.error('[dbg-ut]', taskNumber, 'err=', error ? (error.code ?? error.message) : 'none', 'rows=', data ? 'yes' : 'null', 'hash=', currentSessionHash()?.slice(0,8) ?? 'none');
             if (error) {
                 if (needsRpc(error)) {
                     const r = await db().rpc('tasky_update_task', {
