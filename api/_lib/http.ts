@@ -91,12 +91,14 @@ function extractToken(req: VercelRequest, cookieName: string): string | null {
 async function resolveAndPropagate(req: VercelRequest): Promise<void> {
     let token = extractToken(req, SESSION_COOKIE);
     if (!token) token = extractToken(req, ADMIN_COOKIE);
+    console.error('[dbg-prop] token=', token ? token.slice(0,6) : 'NULL');
     if (!token) return;
     const tokenHash = hashToken(token);
     try {
         const mod = await import('./db/supabase');
         mod.setRequestSessionTokenHash(tokenHash);
-    } catch { /* local driver — no-op */ }
+        console.error('[dbg-prop] set ok', tokenHash.slice(0,8));
+    } catch (e) { console.error('[dbg-prop] import fail', e); }
 }
 
 export async function getSession(req: VercelRequest, cookieName: string): Promise<Session | null> {
