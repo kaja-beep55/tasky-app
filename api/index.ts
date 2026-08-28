@@ -64,7 +64,6 @@ const routes: Route[] = [
 ];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    console.error('[dbg-route] url=', req.url, 'query=', JSON.stringify(req.query));
     const path = (req.url || '/').split('?')[0];
     const matched = routes.find(r => r.pattern.test(path));
     if (!matched) {

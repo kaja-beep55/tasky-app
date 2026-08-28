@@ -84,17 +84,26 @@ function extractToken(req: VercelRequest, cookieName: string): string | null {
     return null;
 }
 
-export async function getSession(req: VercelRequest, cookieName: string): Promise<Session | null> {
-    const token = extractToken(req, cookieName);
-    if (!token) return null;
+// Resolve the request's session and propagate its hash so RLS
+// policies / definer functions (migration 0009) can authorize
+// publishable-key operations. Called for BOTH cookie names so the
+// hash is set before any DB write in this request.
+async function resolveAndPropagate(req: VercelRequest): Promise<void> {
+    let token = extractToken(req, SESSION_COOKIE);
+    if (!token) token = extractToken(req, ADMIN_COOKIE);
+    if (!token) return;
     const tokenHash = hashToken(token);
-    // Propagate the session hash so RLS policies / definer functions
-    // (migration 0009) can authorize publishable-key operations.
     try {
         const mod = await import('./db/supabase');
         mod.setRequestSessionTokenHash(tokenHash);
     } catch { /* local driver — no-op */ }
-    return getDb().getSession(tokenHash);
+}
+
+export async function getSession(req: VercelRequest, cookieName: string): Promise<Session | null> {
+    const token = extractToken(req, cookieName);
+    if (!token) return null;
+    await resolveAndPropagate(req);
+    return getDb().getSession(hashToken(token));
 }
 
 export async function requireUser(req: VercelRequest): Promise<{ session: Session; profile: Profile }> {
